@@ -8,6 +8,7 @@ fn main() {
     {
         "convert" => convert(),
         "fib" => fib(),
+        "xmas" => xmas(),
         program => panic!("unknown program `{}`", program),
     }
 }
@@ -64,5 +65,41 @@ fn fib_parse() -> i32 {
         panic!(err)
     }
     i
+}
+//#endregion
+
+//#region xmas
+const NUMBER_OF_DAYS: usize = 12;
+const ORDINALS: [&str; NUMBER_OF_DAYS] = [
+    "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth", "tenth",
+    "eleventh", "twelfth",
+];
+const GIFTS: [&str; NUMBER_OF_DAYS] = [
+    "a partridge in a pear tree",
+    "two turtle doves",
+    "three french hens",
+    "four calling birds",
+    "five golden rings",
+    "six geese a laying",
+    "seven swans a swimming",
+    "eight maids a milking",
+    "nine ladies dancing",
+    "ten lords a leaping",
+    "eleven pipers piping",
+    "twelve drummers drumming",
+];
+fn xmas() {
+    for day in 0..NUMBER_OF_DAYS {
+        println!("on the {} day of christmas", ORDINALS[day]);
+        println!("my true love sent to me:");
+        for gift in (0..day + 1).rev() {
+            println!(
+                "{}{}",
+                if day > 0 && gift == 0 { "and " } else { "" },
+                GIFTS[gift]
+            )
+        }
+        println!();
+    }
 }
 //#endregion
