@@ -13,6 +13,13 @@ impl Rect {
         self.width >= other.width && self.height >= other.height
     }
 
+    fn square(size: u32) -> Rect {
+        Rect {
+            width: size,
+            height: size,
+        }
+    }
+
     fn grow(&mut self) {
         self.width += 1;
         self.height += 1;
@@ -50,4 +57,6 @@ fn main() {
     println!("r2 can hold r3: {}", r2.can_hold(&r3));
     println!("r3 can hold r1: {}", r3.can_hold(&r1));
     println!("r3 can hold r2: {}", r3.can_hold(&r2));
+
+    println!("r2 can hold square: {}", r2.can_hold(&Rect::square(99)));
 }
