@@ -10,6 +10,20 @@ fn largest<T: PartialOrd>(list: &[T]) -> &T {
     largest
 }
 
+trait Longest {
+    fn longest<'a>(&'a self, other: &'a Self) -> &'a Self;
+}
+
+impl Longest for str {
+    fn longest<'a>(&'a self, other: &'a str) -> &'a str {
+        if self.len() > other.len() {
+            self
+        } else {
+            other
+        }
+    }
+}
+
 fn main() {
     let number_list = vec![34, 50, 25, 100, 65];
 
