@@ -1,7 +1,8 @@
 [package]
-name = "chapter-01"
+name = "chapter02"
 version = "0.1.0"
 authors = ["Barnabas Forgo <speedo@devo.hu>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.6.5"

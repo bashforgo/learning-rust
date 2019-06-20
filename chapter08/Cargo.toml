@@ -1,5 +1,5 @@
 [package]
-name = "chapter-08"
+name = "chapter08"
 version = "0.1.0"
 authors = ["Barnabas Forgo <speedo@devo.hu>"]
 edition = "2018"
