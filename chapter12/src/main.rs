@@ -2,20 +2,18 @@ use std::env;
 use std::fs;
 use std::process;
 
+use chapter12::Config;
+
 fn main() {
-    let args: Vec<String> = env::args().collect();
+    let config = Config::new(&env::args().collect()).unwrap_or_else(|err| die(err));
 
-    let needle = args
-        .get(1)
-        .unwrap_or_else(|| die("first argument should be a regex"));
-    let haystack = args
-        .get(2)
-        .unwrap_or_else(|| die("second argument should be a file"));
+    let query = &config.query;
+    let filename = &config.filename;
 
-    eprintln!("find {} in {}", needle, haystack);
+    eprintln!("find {} in {}", query, filename);
 
-    let contents = fs::read_to_string(haystack)
-        .unwrap_or_else(|_| die(format!("'{}' file not found", haystack).as_ref()));
+    let contents = fs::read_to_string(filename)
+        .unwrap_or_else(|_| die(format!("'{}' file not found", filename).as_ref()));
 
     println!("{}", contents);
 }
