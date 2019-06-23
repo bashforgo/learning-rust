@@ -46,3 +46,27 @@ fn main() {
     let res = memo.get(String::from("wow"));
     println!("{:?}", res);
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    static mut CALLS: u8 = 0;
+
+    #[test]
+    fn computes_once() {
+        unsafe {
+            let mut memo = Memo::new(Box::new(|param: &i32| {
+                CALLS += 1;
+                param * param
+            }));
+
+            memo.get(1);
+            memo.get(1);
+            assert_eq!(CALLS, 1);
+            memo.get(2);
+            memo.get(2);
+            assert_eq!(CALLS, 2);
+        }
+    }
+}
