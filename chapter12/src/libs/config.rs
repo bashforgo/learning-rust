@@ -11,7 +11,7 @@ impl Config {
                 return Err("please pass a regex");
             }
         };
-        let filename = match args.get(1) {
+        let filename = match args.get(2) {
             Some(filename) => filename.clone(),
             None => {
                 return Err("please pass a filename");
