@@ -10,4 +10,3 @@ fn main() {
 
     grep::run(&config).unwrap_or_else(|err| grep::die(&err.to_string()));
 }
-
