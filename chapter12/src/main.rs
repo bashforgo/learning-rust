@@ -2,7 +2,9 @@ use std::env;
 use std::fs;
 use std::process;
 
-use chapter12::Config;
+use chapter12 as grep;
+
+use grep::Config;
 
 fn main() {
     let config = Config::new(&env::args().collect()).unwrap_or_else(|err| die(err));
