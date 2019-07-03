@@ -1,28 +1,61 @@
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(PartialEq)]
-enum List<T> {
-    Cons(T, Box<List<T>>),
+enum Element<T> {
+    Cons(Rc<T>, List<T>),
     Nil,
 }
 
-use List::*;
+type List<T> = Rc<Element<T>>;
 
-impl<T> List<T> {
-    fn cons(v: T, rest: List<T>) -> List<T> {
-        Cons(v, Box::new(rest))
+trait Nil<T> {
+    fn nil() -> List<T>;
+}
+impl<T> Nil<T> for List<T> {
+    fn nil() -> List<T> {
+        Rc::new(Element::Nil)
     }
+}
 
-    fn append(self, other: List<T>) -> List<T> {
-        if let Cons(v, rest) = self {
-            List::cons(v, rest.append(other))
+trait Cons<T, V, R> {
+    fn cons(v: V, rest: R) -> List<T>;
+}
+
+impl<T> Cons<T, T, &List<T>> for List<T> {
+    fn cons(v: T, rest: &List<T>) -> List<T> {
+        Rc::new(Element::Cons(Rc::new(v), Rc::clone(rest)))
+    }
+}
+
+impl<T> Cons<T, T, List<T>> for List<T> {
+    fn cons(v: T, rest: List<T>) -> List<T> {
+        List::cons(v, &rest)
+    }
+}
+
+impl<T> Cons<T, &Rc<T>, &List<T>> for List<T> {
+    fn cons(v: &Rc<T>, rest: &List<T>) -> List<T> {
+        Rc::new(Element::Cons(Rc::clone(v), Rc::clone(rest)))
+    }
+}
+
+trait Append<T> {
+    fn append(&self, rest: &List<T>) -> List<T>;
+}
+
+impl<T> Append<T> for List<T> {
+    fn append(&self, other: &List<T>) -> List<T> {
+        let element = &**self;
+        if let Element::Cons(v, rest) = element {
+            List::cons(v, &rest.append(other))
         } else {
-            other
+            Rc::clone(other)
         }
     }
 }
 
-impl<T: fmt::Display> fmt::Debug for List<T> {
+impl<T: fmt::Display> fmt::Debug for Element<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "List[")?;
 
@@ -30,7 +63,7 @@ impl<T: fmt::Display> fmt::Debug for List<T> {
         let mut current = self;
         loop {
             match current {
-                Cons(e, rest) => {
+                Element::Cons(e, rest) => {
                     if first {
                         first = false;
                     } else {
@@ -39,7 +72,7 @@ impl<T: fmt::Display> fmt::Debug for List<T> {
                     write!(f, "{}", e)?;
                     current = rest;
                 }
-                Nil => {
+                Element::Nil => {
                     break;
                 }
             }
@@ -50,16 +83,16 @@ impl<T: fmt::Display> fmt::Debug for List<T> {
 }
 
 fn main() {
-    let cons = List::cons;
-    println!("{:?}", cons(1, cons(2, cons(3, cons(4, Nil)))));
-    let cons = List::cons;
+    let (cons, nil) = (List::cons, List::nil);
+    println!("{:?}", cons(1, cons(2, cons(3, cons(4, nil())))));
+    let (cons, nil) = (List::cons, List::nil);
     println!(
         "{:?}",
-        cons("ayy", cons("lmao", cons("such", cons("list", Nil))))
+        cons("ayy", cons("lmao", cons("such", cons("list", nil()))))
     );
     println!(
         "{:?}",
-        cons("ayy", cons("lmao", Nil)).append(cons("such", cons("list", Nil)))
+        cons("ayy", cons("lmao", nil())).append(&cons("such", cons("list", nil())))
     );
 }
 
@@ -69,24 +102,52 @@ mod tests {
 
     #[test]
     fn append_nil() {
-        let cons = List::cons;
+        let (cons, nil) = (List::cons, List::nil);
 
-        let list = cons(1, cons(2, cons(3, Nil)));
-        let append_list = list.append(Nil);
+        let list = cons(1, cons(2, cons(3, nil())));
+        let append_list = list.append(&nil());
 
-        let expected = cons(1, cons(2, cons(3, Nil)));
+        let expected = cons(1, cons(2, cons(3, nil())));
         assert_eq!(expected, append_list);
     }
 
     #[test]
     fn append_list() {
-        let cons = List::cons;
+        let (cons, nil) = (List::cons, List::nil);
 
-        let list = cons(1, cons(2, cons(3, Nil)));
-        let other_list = cons(4, cons(5, Nil));
-        let append_list = list.append(other_list);
+        let list = cons(1, cons(2, cons(3, nil())));
+        let other_list = cons(4, cons(5, nil()));
+        let append_list = list.append(&other_list);
 
-        let expected = cons(1, cons(2, cons(3, cons(4, cons(5, Nil)))));
+        let expected = cons(1, cons(2, cons(3, cons(4, cons(5, nil())))));
         assert_eq!(expected, append_list);
+    }
+
+    #[test]
+    fn multiple_owners() {
+        let cons = List::cons;
+        let empty: List<&str> = List::nil();
+        assert_eq!(1, Rc::strong_count(&empty));
+
+        let element = Rc::new("value");
+        assert_eq!(1, Rc::strong_count(&element));
+
+        {
+            let list_a = cons(&element, &empty);
+            assert_eq!(2, Rc::strong_count(&element));
+            assert_eq!(2, Rc::strong_count(&empty));
+
+            {
+                let _list_b = cons(&element, &list_a);
+                assert_eq!(3, Rc::strong_count(&element));
+                assert_eq!(2, Rc::strong_count(&empty));
+            }
+
+            assert_eq!(2, Rc::strong_count(&element));
+            assert_eq!(2, Rc::strong_count(&empty));
+        }
+
+        assert_eq!(1, Rc::strong_count(&element));
+        assert_eq!(1, Rc::strong_count(&empty));
     }
 }
