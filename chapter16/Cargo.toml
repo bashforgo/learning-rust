@@ -5,3 +5,4 @@ authors = ["Barnabas Forgo <speedo@devo.hu>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.7.0"

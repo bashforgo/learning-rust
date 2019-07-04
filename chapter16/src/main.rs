@@ -1,3 +1,6 @@
+use std::sync::mpsc;
+use std::thread;
+
 type Value = i32;
 
 fn split_first(values: Vec<Value>) -> (Value, Vec<Value>) {
@@ -34,6 +37,7 @@ where
     result
 }
 
+const SPAWN_LEN_LIMIT: usize = 10_000;
 fn quick_sort(values: Vec<Value>) -> Vec<Value> {
     if values.len() <= 1 {
         values
@@ -41,18 +45,50 @@ fn quick_sort(values: Vec<Value>) -> Vec<Value> {
         let (pivot, rest) = split_first(values);
         let (left, right) = partition(rest, |v| *v < pivot);
 
-        let mut result: Vec<Value> = quick_sort(left);
+        let (left_tx, left_rx) = mpsc::channel();
+        let (right_tx, right_rx) = mpsc::channel();
+
+        if left.len() < SPAWN_LEN_LIMIT {
+            left_tx.send(quick_sort(left)).unwrap();
+        } else {
+            thread::spawn(move || {
+                left_tx.send(quick_sort(left)).unwrap();
+            });
+        }
+
+        if right.len() < SPAWN_LEN_LIMIT {
+            right_tx.send(quick_sort(right)).unwrap();
+        } else {
+            thread::spawn(move || {
+                right_tx.send(quick_sort(right)).unwrap();
+            });
+        }
+
+        let (left_result, mut right_result) = (left_rx.recv().unwrap(), right_rx.recv().unwrap());
+
+        let mut result: Vec<Value> = left_result;
         result.push(pivot);
-        result.append(&mut quick_sort(right));
+        result.append(&mut right_result);
 
         result
     }
 }
 
 fn main() {
-    let v = vec![
-        235, 25, 253, 23, 414, 14, 12, 431, 24, 13, 543, 63, 647, 568, 67, 969, 85, 47535, 6243,
-    ];
-    let s = quick_sort(v);
-    println!("{:?}", s);
+    use rand::Rng;
+    use std::time;
+
+    let mut rng = rand::thread_rng();
+
+    println!("creating vec");
+    let mut v = vec![];
+    for _ in 0..10_000_000 {
+        v.push(rng.gen());
+    }
+
+    println!("sorting");
+    let start = time::Instant::now();
+    let _ = quick_sort(v);
+    let end = time::Instant::now();
+    println!("done, took {:?}", end - start);
 }
