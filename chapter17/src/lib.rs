@@ -6,7 +6,7 @@ impl Post {
     pub fn new() -> Post {
         Post {
             content: String::new(),
-            state: Some(Box::new(Draft {})),
+            state: Some(Box::new(Draft::default())),
         }
     }
 
@@ -50,13 +50,18 @@ trait State {
 struct Draft {}
 impl State for Draft {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Reviewing { approvals: 0 })
+        Box::new(Reviewing::default())
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
         self
     }
     fn reject(self: Box<Self>) -> Box<dyn State> {
         self
+    }
+}
+impl Default for Draft {
+    fn default() -> Draft {
+        Draft {}
     }
 }
 
@@ -73,11 +78,16 @@ impl State for Reviewing {
                 approvals: self.approvals + 1,
             })
         } else {
-            Box::new(Published {})
+            Box::new(Published::default())
         }
     }
     fn reject(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Draft {})
+        Box::new(Draft::default())
+    }
+}
+impl Default for Reviewing {
+    fn default() -> Reviewing {
+        Reviewing { approvals: 0 }
     }
 }
 
@@ -94,5 +104,10 @@ impl State for Published {
     }
     fn reject(self: Box<Self>) -> Box<dyn State> {
         self
+    }
+}
+impl Default for Published {
+    fn default() -> Published {
+        Published {}
     }
 }
