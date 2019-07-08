@@ -1,12 +1,12 @@
 pub struct Post {
     content: String,
-    status: Option<Box<dyn State>>,
+    state: Option<Box<dyn State>>,
 }
 impl Post {
     pub fn new() -> Post {
         Post {
             content: String::new(),
-            status: Some(Box::new(Draft {})),
+            state: Some(Box::new(Draft {})),
         }
     }
 
@@ -15,64 +15,76 @@ impl Post {
     }
 
     pub fn content(&self) -> &str {
-        self.status.as_ref().unwrap().as_ref().content(&self)
+        self.state.as_ref().unwrap().as_ref().content(&self)
     }
 
     pub fn request_review(&mut self) {
-        if let Some(status) = self.status.take() {
-            self.status = Some(status.request_review());
-        }
+        self.state_change(|state| state.request_review())
     }
 
     pub fn approve(&mut self) {
-        if let Some(status) = self.status.take() {
-            self.status = Some(status.approve());
+        self.state_change(|state| state.approve())
+    }
+
+    pub fn reject(&mut self) {
+        self.state_change(|state| state.reject())
+    }
+
+    fn state_change<F: Fn(Box<dyn State>) -> Box<dyn State>>(&mut self, next_state: F) {
+        if let Some(state) = self.state.take() {
+            self.state = Some(next_state(state));
         }
     }
 }
 
 trait State {
-    fn content<'a>(&self, post: &'a Post) -> &'a str;
+    fn content<'a>(&self, _post: &'a Post) -> &'a str {
+        ""
+    }
 
     fn request_review(self: Box<Self>) -> Box<dyn State>;
     fn approve(self: Box<Self>) -> Box<dyn State>;
+    fn reject(self: Box<Self>) -> Box<dyn State>;
 }
 
 struct Draft {}
 impl State for Draft {
-    fn content<'a>(&self, _post: &'a Post) -> &'a str {
-        ""
-    }
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         Box::new(PendingReview {})
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
         self
     }
+    fn reject(self: Box<Self>) -> Box<dyn State> {
+        self
+    }
 }
 
 struct PendingReview {}
 impl State for PendingReview {
-    fn content<'a>(&self, _post: &'a Post) -> &'a str {
-        ""
-    }
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         self
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
         Box::new(Published {})
     }
+    fn reject(self: Box<Self>) -> Box<dyn State> {
+        Box::new(Draft {})
+    }
 }
 
 struct Published {}
 impl State for Published {
     fn content<'a>(&self, post: &'a Post) -> &'a str {
-        post.content.as_str()
+        &post.content
     }
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         self
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
+        self
+    }
+    fn reject(self: Box<Self>) -> Box<dyn State> {
         self
     }
 }
