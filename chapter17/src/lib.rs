@@ -10,12 +10,15 @@ impl Post {
         }
     }
 
-    pub fn add_text(&mut self, content: &str) {
-        self.content.push_str(content)
+    pub fn add_text(&mut self, to_be_added: &str) {
+        self.state
+            .as_ref()
+            .unwrap()
+            .add_text(&mut self.content, to_be_added)
     }
 
     pub fn content(&self) -> &str {
-        self.state.as_ref().unwrap().as_ref().content(&self)
+        self.state.as_ref().unwrap().content(&self)
     }
 
     pub fn request_review(&mut self) {
@@ -38,6 +41,7 @@ impl Post {
 }
 
 trait State {
+    fn add_text(&self, _content: &mut String, _to_be_added: &str) {}
     fn content<'a>(&self, _post: &'a Post) -> &'a str {
         ""
     }
@@ -49,6 +53,9 @@ trait State {
 
 struct Draft {}
 impl State for Draft {
+    fn add_text(&self, content: &mut String, to_be_added: &str) {
+        content.push_str(to_be_added);
+    }
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         Box::new(Reviewing::default())
     }

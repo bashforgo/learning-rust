@@ -31,6 +31,7 @@ fn main() {
     assert_eq!("", post.content());
 
     post.request_review();
+    post.add_text("[Cannot add content in review]");
     assert_eq!("", post.content());
 
     post.approve();
