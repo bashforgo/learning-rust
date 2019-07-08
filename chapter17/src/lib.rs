@@ -50,7 +50,7 @@ trait State {
 struct Draft {}
 impl State for Draft {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
-        Box::new(PendingReview {})
+        Box::new(Reviewing { approvals: 0 })
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
         self
@@ -60,13 +60,21 @@ impl State for Draft {
     }
 }
 
-struct PendingReview {}
-impl State for PendingReview {
+struct Reviewing {
+    approvals: u8,
+}
+impl State for Reviewing {
     fn request_review(self: Box<Self>) -> Box<dyn State> {
         self
     }
     fn approve(self: Box<Self>) -> Box<dyn State> {
-        Box::new(Published {})
+        if self.approvals < 1 {
+            Box::new(Reviewing {
+                approvals: self.approvals + 1,
+            })
+        } else {
+            Box::new(Published {})
+        }
     }
     fn reject(self: Box<Self>) -> Box<dyn State> {
         Box::new(Draft {})

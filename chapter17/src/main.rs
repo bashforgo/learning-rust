@@ -12,12 +12,14 @@ fn main() {
     assert_eq!("", post.content());
 
     post.approve();
+    assert_eq!("", post.content());
+    post.approve();
     assert_eq!("I ate a salad for lunch today", post.content());
 
 
     let mut post = Post::new();
 
-    post.add_text("I ate a salad for lunch today");
+    post.add_text("I ate bacon for lunch today");
     assert_eq!("", post.content());
 
     post.request_review();
@@ -32,8 +34,9 @@ fn main() {
     assert_eq!("", post.content());
 
     post.approve();
+    post.approve();
     assert_eq!(
-        "I ate a salad for lunch today; After rejection",
+        "I ate bacon for lunch today; After rejection",
         post.content()
     );
 }
