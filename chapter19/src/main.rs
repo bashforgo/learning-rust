@@ -1,3 +1,9 @@
+use chapter19::HelloMacro;
+use hello_macro::HelloMacro;
+
+#[derive(HelloMacro)]
+struct MrsPancakes;
+
 fn main() {
-    println!("Hello, world!");
+    MrsPancakes::hello_macro();
 }

@@ -1,8 +1,12 @@
 [package]
-name = "chapter19"
+name = "hello_macro"
 version = "0.1.0"
 authors = ["Barnabas Forgo <speedo@devo.hu>"]
 edition = "2018"
 
+[lib]
+proc-macro = true
+
 [dependencies]
-hello_macro = { path = "./hello_macro" }
+syn = "0.14.4"
+quote = "0.6.3"
