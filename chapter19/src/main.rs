@@ -4,46 +4,40 @@ use hello_macro::{hello_trace, HelloMacro};
 #[derive(HelloMacro)]
 struct MrsPancakes;
 
-#[hello_trace]
-fn add(left: i32, right: i32) -> i32 {
-    left + right
+struct TestStruct {
+    struct_value: i32,
 }
+struct TestTuple(i32);
 
-// #[hello_trace]
-fn add_tuple((left, right): (i32, i32)) -> i32 {
-    left + right
-}
-
-// #[hello_trace]
-fn add_debug(left: i32, right: i32) -> i32 {
-    print!("[debug add]");
-    print!(" left: {:?}", left);
-    print!(" right: {:?}", right);
-    println!("");
-    let __debug_start = std::time::Instant::now();
-    let __debug_returns = { left + right };
-    let __debug_end = std::time::Instant::now();
-    println!(
-        "[debug add] return: {:?} (took {:?})",
-        __debug_returns,
-        __debug_end - __debug_start
-    );
-    __debug_returns
+enum PathEnum {
+    OnlyValue,
 }
 
 #[hello_trace]
-fn naive_fib(nth: u32) -> i32 {
-    if nth <= 1 {
-        1
-    } else {
-        naive_fib(nth - 1) + naive_fib(nth - 2)
-    }
+fn test_trace(
+    _: i32,
+    ident: i32,
+    TestStruct { struct_value }: TestStruct,
+    TestTuple(tuple_struct): TestTuple,
+    PathEnum::OnlyValue: PathEnum,
+    (t0, t1): (i32, i32),
+    reference: &i32,
+    mut_reference: &mut i32,
+) -> i32 {
+    std::thread::sleep_ms(100);
+    ident * struct_value * tuple_struct * t0 * t1 * *reference * *mut_reference
 }
 
 fn main() {
-    // MrsPancakes::hello_macro();
-    // add(12, 24);
-    // add_tuple((12, 24));
-    // add_debug(12, 24);
-    println!("{:?}", naive_fib(30));
+    MrsPancakes::hello_macro();
+    test_trace(
+        1,
+        2,
+        TestStruct { struct_value: 3 },
+        TestTuple(4),
+        PathEnum::OnlyValue,
+        (5, 6),
+        &7,
+        &mut 8,
+    );
 }
