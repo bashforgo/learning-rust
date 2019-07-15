@@ -4,8 +4,15 @@ use hello_macro::{hello_trace, HelloMacro};
 #[derive(HelloMacro)]
 struct MrsPancakes;
 
+#[derive(Debug)]
 struct TestStruct {
     struct_value: i32,
+}
+impl TestStruct {
+    #[hello_trace]
+    fn hmm(&self, param: i32) {
+        println!("thinking...");
+    }
 }
 struct TestTuple(i32);
 
@@ -40,4 +47,5 @@ fn main() {
         &7,
         &mut 8,
     );
+    (TestStruct { struct_value: 9 }).hmm(10);
 }

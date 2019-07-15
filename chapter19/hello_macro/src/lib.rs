@@ -1,10 +1,11 @@
 extern crate proc_macro;
 
-use crate::proc_macro::TokenStream;
+use proc_macro::TokenStream;
 use quote::{quote, ToTokens};
+use std::convert::From;
 use syn::{
-    self, ArgCaptured, Block, FieldPat, FnArg, Ident, ItemFn, Pat, PatBox, PatIdent, PatRef,
-    PatSlice, PatStruct, PatTuple, PatTupleStruct,
+    self, ArgCaptured, ArgSelf, ArgSelfRef, Block, FieldPat, FnArg, Ident, ItemFn, Pat, PatBox,
+    PatIdent, PatRef, PatSlice, PatStruct, PatTuple, PatTupleStruct,
 };
 
 #[proc_macro_derive(HelloMacro)]
@@ -103,7 +104,16 @@ pub fn hello_trace(attr: TokenStream, input: TokenStream) -> TokenStream {
             FnArg::Captured(ArgCaptured { pat, .. }) => {
                 collect_idents_in_pat(pat, &mut input_idents);
             }
-            _ => unimplemented!("input matching"),
+            FnArg::SelfRef(ArgSelfRef { self_token, .. }) => {
+                input_idents.push(From::from(self_token));
+            }
+            FnArg::SelfValue(ArgSelf { self_token, .. }) => {
+                input_idents.push(From::from(self_token));
+            }
+            FnArg::Inferred(pat) => {
+                collect_idents_in_pat(pat, &mut input_idents);
+            }
+            FnArg::Ignored(_) => {}
         }
     }
     let input_idents2 = input_idents.clone();
