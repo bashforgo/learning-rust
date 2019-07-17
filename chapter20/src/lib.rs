@@ -48,7 +48,6 @@ impl Worker {
                     let rx = &*lock.unwrap();
                     rx.recv().unwrap()
                 };
-                println!("{} executing", id);
                 job.exec();
             }),
         }
